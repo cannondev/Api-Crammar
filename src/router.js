@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import * as Docs from './controllers/doc_controller';
+import * as Docs from './controllers/doc_controller.js';
+import { uploadAndExtractDoc } from './controllers/doc_controller.js';
+import multer from 'multer';
 
 const router = Router();
 
@@ -11,6 +13,19 @@ router.get('/', (req, res) => {
 
 // on routes ending in /someroute
 // ----------------------------------------------------
+
+const upload = multer({ dest: 'uploads/'})
+
+router.post('/docs/upload', upload.single('pdf'), async (req, res) => {
+  console.log('Upload route hit. req.file:', req.file);
+  try {
+    const result = await uploadAndExtractDoc(req.file);
+    res.json(result);
+  } catch (error) {
+    console.log("enefoiasdfgiouajsf");
+    res.status(500).json({ error: error.message });
+  }
+});
 
 const handleCreateDoc = async (req, res) => {
   try {
@@ -58,7 +73,7 @@ const handleGetDoc = async (req, res) => {
 const handleDeleteDoc = async (req, res) => {
   try {
     // use req.body etc to await some contoller function
-    const result = await Posts.deleteDoc(req.params.id);
+    const result = await Doc.deleteDoc(req.params.id);
     // send back the result
     res.json(result);
   } catch (error) {
@@ -69,6 +84,6 @@ const handleDeleteDoc = async (req, res) => {
 
 router.route('/docs/:id')
   .get(handleGetDoc)
-  .delete(handleDeletePost);
+  .delete(handleDeleteDoc);
 
 export default router;

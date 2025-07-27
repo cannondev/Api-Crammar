@@ -3,10 +3,16 @@ import cors from 'cors';
 import path from 'path';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import apiRoutes from './router';
+import apiRoutes from './router.js';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import 'dotenv/config';
 
 // initialize
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // enable/disable cross origin resource sharing if necessary
 app.use(cors());
