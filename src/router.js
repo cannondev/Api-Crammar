@@ -70,7 +70,7 @@ const handleGetDoc = async (req, res) => {
 const handleDeleteDoc = async (req, res) => {
   try {
     // use req.body etc to await some contoller function
-    const result = await Doc.deleteDoc(req.params.id);
+    const result = await Docs.deleteDoc(req.params.id);
     // send back the result
     res.json(result);
   } catch (error) {
