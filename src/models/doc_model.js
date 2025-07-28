@@ -6,7 +6,7 @@ export const docSchema = new Schema({
   content: { type: String },
   // preview may need to be some kind of file
   preview: { type: String },
-  description: { type: String },
+  summary: { type: String },
   wordArray: [{ type: String }],
 }, {
   timestamps: true,

@@ -9,11 +9,9 @@ router.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Crammar api!' });
 });
 
-/// your routes will go here
-
-// on routes ending in /someroute
 // ----------------------------------------------------
 
+// Routes
 const upload = multer({ dest: 'uploads/'})
 
 router.post('/docs/upload', upload.single('pdf'), async (req, res) => {
@@ -22,7 +20,6 @@ router.post('/docs/upload', upload.single('pdf'), async (req, res) => {
     const result = await uploadAndExtractDoc(req.file);
     res.json(result);
   } catch (error) {
-    console.log("enefoiasdfgiouajsf");
     res.status(500).json({ error: error.message });
   }
 });

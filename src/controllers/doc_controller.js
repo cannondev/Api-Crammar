@@ -1,7 +1,6 @@
 import Doc from "../models/doc_model.js";
 import fs from "fs";
 import path from "path";
-import unzipper from "unzipper";
 import {
   ServicePrincipalCredentials,
   PDFServices,
@@ -12,14 +11,15 @@ import {
   ExtractPDFResult
 } from "@adobe/pdfservices-node-sdk";
 import AdmZip from "adm-zip";
+import { genDocSummary } from "./openai_controller.js";
 
-// Create doc from plain fields (e.g., used by non-file form)
+// Create doc with blank fields
 export async function createDoc(docFields) {
   const doc = new Doc({
     title: docFields.title,
     content: docFields.content,
     coverUrl: docFields.coverUrl,
-    description: docFields.description,
+    summary: docFields.summary,
     wordArray: docFields.wordArray || (docFields.content?.split(/\s+/) ?? []),
   });
 
@@ -74,38 +74,42 @@ export async function updateDoc(id, docFields) {
 export async function uploadAndExtractDoc(file) {
   let readStream;
   try {
-    // 1. Credentials from env
+    // Initial setup, create credentials instance
     const credentials = new ServicePrincipalCredentials({
       clientId: process.env.PDF_SERVICES_CLIENT_ID,
       clientSecret: process.env.PDF_SERVICES_CLIENT_SECRET
     });
 
-    // 2. PDF Services instance
+     // Creates a PDF Services instance
     const pdfServices = new PDFServices({ credentials });
 
-    // 3. Upload PDF
+    // Creates an asset(s) from source file(s) and upload
     readStream = fs.createReadStream(file.path);
     const inputAsset = await pdfServices.upload({
       readStream,
       mimeType: MimeType.PDF
     });
 
-    // 4. Set up extract params
+    // Create parameters for the job
     const params = new ExtractPDFParams({
       elementsToExtract: [ExtractElementType.TEXT]
     });
 
-    // 5. Create and submit job
+    // Creates a new job instance
     const job = new ExtractPDFJob({ inputAsset, params });
+
+    // Submit the job and get the job result
     const pollingURL = await pdfServices.submit({ job });
     const pdfServicesResponse = await pdfServices.getJobResult({
       pollingURL,
       resultType: ExtractPDFResult
     });
 
-    // 6. Get result asset and save ZIP
+    // Get content from the resulting asset(s)
     const resultAsset = pdfServicesResponse.result.resource;
     const streamAsset = await pdfServices.getContent({ asset: resultAsset });
+
+    // Creates a write stream and copy stream asset's content to it
     const outputPath = `output_${Date.now()}.zip`;
     const writeStream = fs.createWriteStream(outputPath);
     streamAsset.readStream.pipe(writeStream);
@@ -116,27 +120,31 @@ export async function uploadAndExtractDoc(file) {
       writeStream.on("error", reject);
     });
 
-    // 7. Extract and parse JSON
+    // Unzip and parse
     const zip = new AdmZip(outputPath);
     const jsondata = zip.readAsText('structuredData.json');
     const data = JSON.parse(jsondata);
 
-    // 8. Extract text and build word array
+    // Build word array
     const allText = data.elements
       .filter((el) => el.Text)
       .map((el) => el.Text)
       .join(" ");
     const wordArray = allText.split(/\s+/).filter(Boolean);
 
-    // 9. Save to DB (your existing logic)
+    // OpenAI Integration - uses allText to generate summary of the pdf
+    const summary = await genDocSummary(allText);
+
+    // Save to database
     const doc = new Doc({
       title: path.basename(file.originalname, ".pdf"),
       content: allText,
+      summary: summary,
       wordArray,
     });
     const savedDoc = await doc.save();
 
-    // Cleanup temp files
+    // Cleanup
     fs.unlinkSync(file.path);
     fs.unlinkSync(outputPath);
 
