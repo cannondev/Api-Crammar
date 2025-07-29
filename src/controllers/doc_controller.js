@@ -1,4 +1,5 @@
 import Doc from "../models/doc_model.js";
+import os from "os";
 import fs from "fs";
 import path from "path";
 import {
@@ -8,7 +9,7 @@ import {
   ExtractPDFParams,
   ExtractElementType,
   ExtractPDFJob,
-  ExtractPDFResult
+  ExtractPDFResult,
 } from "@adobe/pdfservices-node-sdk";
 import AdmZip from "adm-zip";
 import { genDocSummary } from "./openai_controller.js";
@@ -17,6 +18,7 @@ import { genDocSummary } from "./openai_controller.js";
 export async function createDoc(docFields) {
   const doc = new Doc({
     title: docFields.title,
+    fileName: docFields.fileName,
     content: docFields.content,
     coverUrl: docFields.coverUrl,
     summary: docFields.summary,
@@ -71,28 +73,29 @@ export async function updateDoc(id, docFields) {
 }
 
 // Upload and extract PDF via Adobe API
-export async function uploadAndExtractDoc(file) {
+export async function uploadAndExtractDoc(file, originalName, givenTitle) {
   let readStream;
+  let outputPath;
   try {
     // Initial setup, create credentials instance
     const credentials = new ServicePrincipalCredentials({
       clientId: process.env.PDF_SERVICES_CLIENT_ID,
-      clientSecret: process.env.PDF_SERVICES_CLIENT_SECRET
+      clientSecret: process.env.PDF_SERVICES_CLIENT_SECRET,
     });
 
-     // Creates a PDF Services instance
+    // Creates a PDF Services instance
     const pdfServices = new PDFServices({ credentials });
 
     // Creates an asset(s) from source file(s) and upload
     readStream = fs.createReadStream(file.path);
     const inputAsset = await pdfServices.upload({
       readStream,
-      mimeType: MimeType.PDF
+      mimeType: MimeType.PDF,
     });
 
     // Create parameters for the job
     const params = new ExtractPDFParams({
-      elementsToExtract: [ExtractElementType.TEXT]
+      elementsToExtract: [ExtractElementType.TEXT],
     });
 
     // Creates a new job instance
@@ -102,7 +105,7 @@ export async function uploadAndExtractDoc(file) {
     const pollingURL = await pdfServices.submit({ job });
     const pdfServicesResponse = await pdfServices.getJobResult({
       pollingURL,
-      resultType: ExtractPDFResult
+      resultType: ExtractPDFResult,
     });
 
     // Get content from the resulting asset(s)
@@ -110,7 +113,7 @@ export async function uploadAndExtractDoc(file) {
     const streamAsset = await pdfServices.getContent({ asset: resultAsset });
 
     // Creates a write stream and copy stream asset's content to it
-    const outputPath = `output_${Date.now()}.zip`;
+    outputPath = path.join(os.tmpdir(), `output_${Date.now()}.zip`);
     const writeStream = fs.createWriteStream(outputPath);
     streamAsset.readStream.pipe(writeStream);
 
@@ -122,7 +125,7 @@ export async function uploadAndExtractDoc(file) {
 
     // Unzip and parse
     const zip = new AdmZip(outputPath);
-    const jsondata = zip.readAsText('structuredData.json');
+    const jsondata = zip.readAsText("structuredData.json");
     const data = JSON.parse(jsondata);
 
     // Build word array
@@ -137,16 +140,13 @@ export async function uploadAndExtractDoc(file) {
 
     // Save to database
     const doc = new Doc({
-      title: path.basename(file.originalname, ".pdf"),
+      title: givenTitle,
+      fileName: originalName,
       content: allText,
       summary: summary,
       wordArray,
     });
     const savedDoc = await doc.save();
-
-    // Cleanup
-    fs.unlinkSync(file.path);
-    fs.unlinkSync(outputPath);
 
     return savedDoc;
   } catch (err) {
@@ -154,5 +154,11 @@ export async function uploadAndExtractDoc(file) {
     throw new Error(`Adobe PDF extract failed: ${err.message}`);
   } finally {
     readStream?.destroy();
+    try {
+      fs.unlinkSync(file.path);
+    } catch {}
+    try {
+      if (outputPath) fs.unlinkSync(outputPath.path);
+    } catch {}
   }
 }

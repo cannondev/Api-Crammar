@@ -17,7 +17,7 @@ const upload = multer({ dest: 'uploads/'})
 router.post('/docs/upload', upload.single('pdf'), async (req, res) => {
   console.log('Upload route hit. req.file:', req.file);
   try {
-    const result = await uploadAndExtractDoc(req.file);
+    const result = await uploadAndExtractDoc(req.file, req.file.originalname, req.body.title);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -3,6 +3,7 @@ import mongoose, { Schema } from 'mongoose';
 // create a docSchema with a title field
 export const docSchema = new Schema({
   title: { type: String },
+  fileName: { type: String },
   content: { type: String },
   // preview may need to be some kind of file
   preview: { type: String },
