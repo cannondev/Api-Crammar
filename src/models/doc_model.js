@@ -7,6 +7,7 @@ export const docSchema = new Schema({
   pdfUrl: { type: String },
   summary: { type: String },
   wordArray: [{ type: String }],
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, {
   timestamps: true,
   toObject: { virtuals: true },

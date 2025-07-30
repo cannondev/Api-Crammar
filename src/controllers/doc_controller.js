@@ -1,7 +1,7 @@
 import Doc from "../models/doc_model.js";
 import os from "os"; // for temporary file storage
 import fs from "fs"; // for file operations
-import path from "path"; 
+import path from "path";
 
 // the following imports are for Adobe PDF Services
 import {
@@ -27,6 +27,7 @@ export async function createDoc(docFields) {
     pdfUrl: docFields.pdfUrl,
     summary: docFields.summary,
     wordArray: docFields.wordArray,
+    userId: docFields.userId,
   });
 
   try {
@@ -38,9 +39,9 @@ export async function createDoc(docFields) {
 }
 
 // Get all docs
-export async function getDocs() {
+export async function getDocs(userId) {
   try {
-    return await Doc.find();
+    return await Doc.find({ userId });
   } catch (error) {
     throw new Error(`get docs error: ${error}`);
   }
@@ -138,7 +139,9 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
     // Create PDF URL for the uploaded file for react-pdf
     const protocol =
       process.env.NODE_ENV === "production" ? "https" : req.protocol;
-    const pdfUrl = `${protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    const pdfUrl = `${protocol}://${req.get("host")}/uploads/${
+      req.file.filename
+    }`;
 
     // Save to database
     const doc = new Doc({
@@ -146,8 +149,9 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
       fileName: originalName,
       content: allText,
       summary: summary,
-      pdfUrl, // persist
+      pdfUrl,
       wordArray,
+      userId: req.user._id,
     });
     const savedDoc = await doc.save();
 
