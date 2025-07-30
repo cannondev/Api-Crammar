@@ -20,7 +20,7 @@ export async function createDoc(docFields) {
     title: docFields.title,
     fileName: docFields.fileName,
     content: docFields.content,
-    coverUrl: docFields.coverUrl,
+    pdfUrl: docFields.pdfUrl,
     summary: docFields.summary,
     wordArray: docFields.wordArray || (docFields.content?.split(/\s+/) ?? []),
   });
@@ -73,7 +73,7 @@ export async function updateDoc(id, docFields) {
 }
 
 // Upload and extract PDF via Adobe API
-export async function uploadAndExtractDoc(file, originalName, givenTitle) {
+export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
   let readStream;
   let outputPath;
   try {
@@ -138,12 +138,17 @@ export async function uploadAndExtractDoc(file, originalName, givenTitle) {
     // OpenAI Integration - uses allText to generate summary of the pdf
     const summary = await genDocSummary(allText);
 
+    const pdfUrl = `${req.protocol}://${req.get("host")}/uploads/${
+      req.file.filename
+    }`;
+
     // Save to database
     const doc = new Doc({
       title: givenTitle,
       fileName: originalName,
       content: allText,
       summary: summary,
+      pdfUrl, // persist
       wordArray,
     });
     const savedDoc = await doc.save();
@@ -154,9 +159,9 @@ export async function uploadAndExtractDoc(file, originalName, givenTitle) {
     throw new Error(`Adobe PDF extract failed: ${err.message}`);
   } finally {
     readStream?.destroy();
-    try {
-      fs.unlinkSync(file.path);
-    } catch {}
+    // try {
+    //   fs.unlinkSync(file.path);
+    // } catch {}
     try {
       if (outputPath) fs.unlinkSync(outputPath.path);
     } catch {}

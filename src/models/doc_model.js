@@ -1,12 +1,10 @@
 import mongoose, { Schema } from 'mongoose';
 
-// create a docSchema with a title field
 export const docSchema = new Schema({
   title: { type: String },
   fileName: { type: String },
   content: { type: String },
-  // preview may need to be some kind of file
-  preview: { type: String },
+  pdfUrl: { type: String },
   summary: { type: String },
   wordArray: [{ type: String }],
 }, {
@@ -15,7 +13,6 @@ export const docSchema = new Schema({
   toJSON: { virtuals: true },
 });
 
-// create a DocModel class from schema
 const DocModel = mongoose.model('Doc', docSchema);
 
 export default DocModel;
