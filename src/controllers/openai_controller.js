@@ -5,7 +5,6 @@ dotenv.config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// prompts created by Thomas Clark
 export async function genDocSummary(docContent) {
   const prompt = `Provide a one paragraph summary of the following document. Focus on reading comprehension: ${docContent}`;
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import multer from "multer";
+import multer from "multer"; // for handling file uploads
 import * as Docs from "./controllers/doc_controller.js";
 import { uploadAndExtractDoc } from "./controllers/doc_controller.js";
 
@@ -7,7 +7,7 @@ const router = Router();
 const upload = multer({ dest: "uploads/" });
 
 // ----------------------------------------------------
-// Routes
+// Routes adapted from my CS52 lab5
 router.get("/", (req, res) => {
   res.json({ message: "Welcome to the Crammar api!" });
 });
@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
 router.post("/docs/upload", upload.single("pdf"), async (req, res) => {
   try {
     const savedDoc = await uploadAndExtractDoc(
-      req,
+      req, // need to send req to controller to access file
       req.file,
       req.file.originalname,
       req.body.title

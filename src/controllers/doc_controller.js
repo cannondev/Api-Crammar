@@ -1,7 +1,9 @@
 import Doc from "../models/doc_model.js";
-import os from "os";
-import fs from "fs";
-import path from "path";
+import os from "os"; // for temporary file storage
+import fs from "fs"; // for file operations
+import path from "path"; 
+
+// the following imports are for Adobe PDF Services
 import {
   ServicePrincipalCredentials,
   PDFServices,
@@ -12,9 +14,11 @@ import {
   ExtractPDFResult,
 } from "@adobe/pdfservices-node-sdk";
 import AdmZip from "adm-zip";
+
+// openAI API usage
 import { genDocSummary } from "./openai_controller.js";
 
-// Create doc with blank fields
+// Create a new document instance
 export async function createDoc(docFields) {
   const doc = new Doc({
     title: docFields.title,
@@ -22,7 +26,7 @@ export async function createDoc(docFields) {
     content: docFields.content,
     pdfUrl: docFields.pdfUrl,
     summary: docFields.summary,
-    wordArray: docFields.wordArray || (docFields.content?.split(/\s+/) ?? []),
+    wordArray: docFields.wordArray,
   });
 
   try {
@@ -63,16 +67,9 @@ export async function deleteDoc(id) {
   }
 }
 
-// Update doc
-export async function updateDoc(id, docFields) {
-  try {
-    return await Doc.findByIdAndUpdate(id, docFields, { new: true });
-  } catch (error) {
-    throw new Error(`update doc error: ${error}`);
-  }
-}
-
 // Upload and extract PDF via Adobe API
+// This function handles the file upload, extraction, and saving to the database
+// https://developer.adobe.com/document-services/docs/overview/pdf-extract-api/quickstarts/nodejs/
 export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
   let readStream;
   let outputPath;
@@ -113,7 +110,7 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
     const streamAsset = await pdfServices.getContent({ asset: resultAsset });
 
     // Creates a write stream and copy stream asset's content to it
-    outputPath = path.join(os.tmpdir(), `output_${Date.now()}.zip`);
+    outputPath = path.join(os.tmpdir(), `output_${Date.now()}.zip`); // Temporary file path for each new doc, date.now gives unique file name - provided by chatGPT
     const writeStream = fs.createWriteStream(outputPath);
     streamAsset.readStream.pipe(writeStream);
 
@@ -128,7 +125,7 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
     const jsondata = zip.readAsText("structuredData.json");
     const data = JSON.parse(jsondata);
 
-    // Build word array
+    // Build word array - provided by chatGPT
     const allText = data.elements
       .filter((el) => el.Text)
       .map((el) => el.Text)
@@ -138,6 +135,7 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
     // OpenAI Integration - uses allText to generate summary of the pdf
     const summary = await genDocSummary(allText);
 
+    // Create PDF URL for the uploaded file for react-pdf
     const pdfUrl = `${req.protocol}://${req.get("host")}/uploads/${
       req.file.filename
     }`;
@@ -159,9 +157,6 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
     throw new Error(`Adobe PDF extract failed: ${err.message}`);
   } finally {
     readStream?.destroy();
-    // try {
-    //   fs.unlinkSync(file.path);
-    // } catch {}
     try {
       if (outputPath) fs.unlinkSync(outputPath.path);
     } catch {}

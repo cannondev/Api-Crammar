@@ -8,9 +8,12 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
+// much of this code is boilerplate from CS52 Kahoot API Short Assignment
+
 // initialize
 const app = express();
 
+// get the current directory name and file name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -20,8 +23,6 @@ app.use(morgan('dev'));
 
 app.set('view engine', 'ejs');
 
-app.use(express.static('static'));
-
 app.set('views', path.join(__dirname, '../src/views'));
 
 // enable json message body for posting data to API
@@ -29,6 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // To parse the incoming requests with JSON payloads
 
 // additional init stuff should go before hitting the routing
+// this is used to find pdf files for given docs, to render them in the react-pdf viewer, 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // REGISTER OUR ROUTES -------------------------------
