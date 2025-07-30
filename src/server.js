@@ -7,6 +7,7 @@ import apiRoutes from './router.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
+import fs from 'fs';
 
 // much of this code is boilerplate from CS52 Kahoot API Short Assignment
 
@@ -16,6 +17,12 @@ const app = express();
 // get the current directory name and file name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
 
 app.use(cors());
 
