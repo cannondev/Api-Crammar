@@ -81,12 +81,19 @@ router.route("/docs/:id").get(handleGetDoc).delete(handleDeleteDoc);
 // Register handler - authentication implemented with VS Copilot
 export async function registerUser(req, res) {
   const { username, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+  console.log('Register payload:', req.body);             // log the incoming data
   try {
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ username, password: hashedPassword });
-    res.json({ message: 'User registered', userId: user._id });
+    return res.json({ message: 'User registered', userId: user._id });
   } catch (err) {
-    res.status(400).json({ error: 'User already exists' });
+    console.error('Registration error:', err);               // log the full error
+    // If it's a genuine duplicate‐key error (username collision):
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    // Otherwise return the real problem so you can see it on the client:
+    return res.status(500).json({ error: err.message });
   }
 }
 
