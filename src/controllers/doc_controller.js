@@ -136,9 +136,9 @@ export async function uploadAndExtractDoc(req, file, originalName, givenTitle) {
     const summary = await genDocSummary(allText);
 
     // Create PDF URL for the uploaded file for react-pdf
-    const pdfUrl = `${req.protocol}://${req.get("host")}/uploads/${
-      req.file.filename
-    }`;
+    const protocol =
+      process.env.NODE_ENV === "production" ? "https" : req.protocol;
+    const pdfUrl = `${protocol}://${req.get("host")}/uploads/${req.file.filename}`;
 
     // Save to database
     const doc = new Doc({
