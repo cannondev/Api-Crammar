@@ -31,6 +31,13 @@ app.use(express.json()); // To parse the incoming requests with JSON payloads
 
 // additional init stuff should go before hitting the routing
 // this is used to find pdf files for given docs, to render them in the react-pdf viewer, 
+// CORS headers for static files in /uploads, provided by Copilot 
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // Or specify your frontend URL instead of '*'
+  res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // REGISTER OUR ROUTES -------------------------------
