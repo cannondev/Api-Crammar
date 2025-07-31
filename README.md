@@ -1,4 +1,4 @@
-# Crammar API
+# Crammar
 
 ## Description
 This is Crammar, a tool that I created to help me stay on track with my class readings and reduce the time I spend on my computer during Sophomore Summer. It is a full stack app running its own proprietary Crammar API that controls and Adobe PDF Services API and the OpenAI API to scan PDF files from your computer and produce an RSVP (Rapid Serial Visual Presentation) interface to allow the user to read texts at insanely high words per minute.
@@ -14,16 +14,16 @@ Follow these steps to run the project locally:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/cannondev/Api-Crammar.git
+git clone https://github.com/cannondev/Crammar.git
 
 # 2. Navigate into the project folder
-cd Api-Crammar
+cd path/to/Crammar
 
 # 3. Install dependencies
 npm install
 
 # 4. Run the development server
-npm start
+npm run dev
 ```
 
 ## Learning Journey:
@@ -33,6 +33,4 @@ For this project, I learned how to interface with the Adobe PDF Services API and
 
 Some major challenges I faced were styling the interfaces and making sure the controls were responsive with the text. I also spent a lot of time fiddling with the pdf file type and storing that and moving it back and forth from the frontend to the api. The Adobe PDF API was complicated and required lots of debugging in Chrome devTools to make sure what I wanted it to output was going to the right places and in the right data types.
 
-
-
-
+Disclaimer: I do believe you sell yourself short by doing anything "half-way," such as reading at 4x your normal wpm or skipping straight to a summary. This project is supposed to be a lighthearted and fun exercise of my development skills. You get out what you put in.
