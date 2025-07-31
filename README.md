@@ -1,7 +1,7 @@
 # Crammar
 
 ## Description
-This is Crammar, a tool that I created to help me stay on track with my class readings and reduce the time I spend on my computer during Sophomore Summer. It is a full stack app running its own proprietary Crammar API that controls and Adobe PDF Services API and the OpenAI API to scan PDF files from your computer and produce an RSVP (Rapid Serial Visual Presentation) interface to allow the user to read texts at insanely high words per minute.
+This is Crammar, a tool that I created to help me stay on track with my class readings and reduce the time I spend on my computer during Sophomore Summer. It is a full stack app running its own proprietary Crammar API that controls Adobe PDF Services API and the OpenAI API to scan PDF files from your computer and produce an RSVP (Rapid Serial Visual Presentation) interface to allow the user to read texts at an insanely high rate (words per minute).
 
 ## Deployed Application
 The deployed frontend can be found here: https://crammar.onrender.com/
